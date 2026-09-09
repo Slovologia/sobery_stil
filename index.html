@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Собери стиль! — Функциональные стили речи</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  }
+  .game-container {
+    height: 100vh;
+    width: 100vw;
+    position: relative;
+    padding: 8px;
+  }
+  h1 {
+    text-align: center;
+    color: #2c3e50;
+    font-size: 1.4em;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .subtitle {
+    text-align: center;
+    color: #7f8c8d;
+    font-size: 0.8em;
+    margin-bottom: 6px;
+  }
+  .game-area {
+    position: relative;
+    height: calc(100vh - 80px);
+    width: 100%;
+  }
+  
+  /* Чемоданы по углам */
+  .suitcase-wrapper {
+    position: absolute;
+    width: 24%;
+    height: 48%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .suitcase-wrapper.tl { top: 5px; left: 5px; }
+  .suitcase-wrapper.tr { top: 5px; right: 5px; }
+  .suitcase-wrapper.bl { bottom: 5px; left: 5px; }
+  .suitcase-wrapper.br { bottom: 5px; right: 5px; }
+  
+  .suitcase {
+    width: 100%;
+    height: 75%;
+    border-radius: 12px;
+    padding: 8px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 3px solid;
+  }
+  .suitcase.drag-over {
+    transform: scale(1.05);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+  }
+  
+  /* Декор чемодана */
+  .suitcase::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40%;
+    height: 8px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 4px;
+  }
+  .suitcase::after {
+    content: '';
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 20px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.6);
+  }
+  
+  .suitcase-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+  }
+  .suitcase-icon { font-size: 1.3em; }
+  .suitcase-title {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+  }
+  .suitcase-desc {
+    font-size: 0.65em;
+    color: rgba(255,255,255,0.9);
+    font-style: italic;
+  }
+  .cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    height: calc(100% - 45px);
+    align-content: flex-start;
+    overflow-y: auto;
+    padding: 4px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.15);
+  }
+  
+  /* Цвета чемоданов */
+  .suitcase.nauchnyy { background: linear-gradient(145deg, #5dade2, #2e86c1); border-color: #1a5276; }
+  .suitcase.oficialnyy { background: linear-gradient(145deg, #85929e, #566573); border-color: #2c3e50; }
+  .suitcase.razgovornyy { background: linear-gradient(145deg, #f5b041, #e67e22); border-color: #b9770e; }
+  .suitcase.publicisticheskiy { background: linear-gradient(145deg, #ec7063, #cb4335); border-color: #922b21; }
+  
+  /* Персонажи */
+  .character {
+    font-size: 2.5em;
+    margin-top: 4px;
+    filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.2));
+  }
+  
+  /* Центральная зона с одеждой */
+  .clothes-pool {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 42%;
+    height: 75%;
+    background: rgba(255,255,255,0.7);
+    border: 3px dashed #95a5a6;
+    border-radius: 20px;
+    padding: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-content: flex-start;
+    justify-content: center;
+    overflow-y: auto;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+  .pool-label {
+    width: 100%;
+    text-align: center;
+    font-size: 0.85em;
+    color: #7f8c8d;
+    font-weight: bold;
+    margin-bottom: 6px;
+  }
+  
+  /* Карточки-одежда */
+  .clothing-card {
+    position: relative;
+    padding: 8px 10px;
+    cursor: grab;
+    font-size: 0.7em;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    border-radius: 8px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    transition: transform 0.15s, box-shadow 0.15s;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .clothing-card:hover {
+    transform: translateY(-3px) rotate(-2deg);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+  }
+  .clothing-card:active { cursor: grabbing; }
+  .clothing-card.dragging { opacity: 0.4; }
+  .clothing-card.correct { box-shadow: 0 0 0 3px #27ae60, 0 3px 6px rgba(0,0,0,0.2); }
+  .clothing-card.wrong { box-shadow: 0 0 0 3px #e74c3c, 0 3px 6px rgba(0,0,0,0.2); }
+  
+  /* Формы одежды */
+  .clothing-card.tshirt {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    width: 95px;
+    height: 70px;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 25%, 100% 100%, 0% 100%, 0% 25%);
+  }
+  .clothing-card.pants {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    width: 85px;
+    height: 90px;
+    clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 55% 100%, 50% 40%, 45% 100%, 0% 100%);
+  }
+  .clothing-card.shoe {
+    background: linear-gradient(135deg, #34495e, #2c3e50);
+    width: 90px;
+    height: 50px;
+    border-radius: 30px 10px 10px 30px;
+  }
+  .clothing-card.hat {
+    background: linear-gradient(135deg, #f39c12, #d68910);
+    width: 85px;
+    height: 60px;
+    border-radius: 50% 50% 10px 10px;
+  }
+  .clothing-card.scarf {
+    background: linear-gradient(135deg, #e91e63, #c2185b);
+    width: 110px;
+    height: 55px;
+    border-radius: 15px;
+    transform: rotate(-3deg);
+  }
+  .clothing-card.jacket {
+    background: linear-gradient(135deg, #2c3e50, #1a252f);
+    width: 95px;
+    height: 80px;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 25%, 100% 100%, 0% 100%, 0% 25%);
+  }
+  .clothing-card.tie {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    width: 60px;
+    height: 85px;
+    clip-path: polygon(40% 0%, 60% 0%, 100% 30%, 70% 100%, 50% 85%, 30% 100%, 0% 30%);
+  }
+  .clothing-card.boot {
+    background: linear-gradient(135deg, #5d4037, #3e2723);
+    width: 70px;
+    height: 95px;
+    border-radius: 10px 10px 5px 5px;
+  }
+  .clothing-card.glasses {
+    background: linear-gradient(135deg, #00bcd4, #0097a7);
+    width: 80px;
+    height: 55px;
+    border-radius: 50%;
+  }
+  .clothing-card.badge {
+    background: linear-gradient(135deg, #f1c40f, #f39c12);
+    width: 75px;
+    height: 60px;
+    border-radius: 5px;
+    color: #2c3e50;
+    text-shadow: none;
+  }
+  
+  /* Кнопки */
+  .controls {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+  }
+  .btn-check {
+    background: linear-gradient(135deg, #27ae60, #1e8449);
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    font-size: 0.95em;
+    border-radius: 25px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(39,174,96,0.4);
+    font-weight: bold;
+    transition: all 0.2s;
+  }
+  .btn-check:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(39,174,96,0.6); }
+  .btn-reset {
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    font-size: 0.95em;
+    border-radius: 25px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(127,140,141,0.4);
+    transition: all 0.2s;
+  }
+  .btn-reset:hover { transform: translateY(-2px); }
+  
+  /* Модальное окно */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+  }
+  .modal.show { display: flex; }
+  .modal-content {
+    background: white;
+    padding: 30px 50px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 450px;
+    animation: popIn 0.4s ease;
+  }
+  @keyframes popIn {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .modal-emoji { font-size: 3.5em; margin-bottom: 10px; }
+  .modal-title { font-size: 1.8em; color: #27ae60; margin-bottom: 10px; font-weight: bold; }
+  .modal-text { font-size: 1em; color: #555; margin-bottom: 20px; line-height: 1.4; }
+  .modal-close {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 20px;
+    font-size: 1em;
+    cursor: pointer;
+  }
+  .modal-close:hover { background: #2980b9; }
+</style>
+</head>
+<body>
+
+<div class="game-container">
+  <h1> Собери стиль!</h1>
+  <p class="subtitle">Перетащи одежду со словами в нужный чемодан</p>
+  
+  <div class="game-area">
+    <!-- Чемодан 1: Научный -->
+    <div class="suitcase-wrapper tl">
+      <div class="suitcase nauchnyy" data-style="nauchnyy">
+        <div class="suitcase-header">
+          <span class="suitcase-icon">🔬</span>
+          <div>
+            <div class="suitcase-title">Научный</div>
+            <div class="suitcase-desc">Точность, термины</div>
+          </div>
+        </div>
+        <div class="cards-container"></div>
+      </div>
+      <div class="character">👩‍🔬</div>
+    </div>
+    
+    <!-- Чемодан 2: Официально-деловой -->
+    <div class="suitcase-wrapper tr">
+      <div class="suitcase oficialnyy" data-style="oficialnyy">
+        <div class="suitcase-header">
+          <span class="suitcase-icon">📋</span>
+          <div>
+            <div class="suitcase-title">Официально-деловой</div>
+            <div class="suitcase-desc">Документы, стандарты</div>
+          </div>
+        </div>
+        <div class="cards-container"></div>
+      </div>
+      <div class="character">👨‍💼</div>
+    </div>
+    
+    <!-- Чемодан 3: Разговорный -->
+    <div class="suitcase-wrapper bl">
+      <div class="suitcase razgovornyy" data-style="razgovornyy">
+        <div class="suitcase-header">
+          <span class="suitcase-icon">💬</span>
+          <div>
+            <div class="suitcase-title">Разговорный</div>
+            <div class="suitcase-desc">Дружеское общение</div>
+          </div>
+        </div>
+        <div class="cards-container"></div>
+      </div>
+      <div class="character">👧</div>
+    </div>
+    
+    <!-- Чемодан 4: Публицистический -->
+    <div class="suitcase-wrapper br">
+      <div class="suitcase publicisticheskiy" data-style="publicisticheskiy">
+        <div class="suitcase-header">
+          <span class="suitcase-icon">📰</span>
+          <div>
+            <div class="suitcase-title">Публицистический</div>
+            <div class="suitcase-desc">СМИ, общество</div>
+          </div>
+        </div>
+        <div class="cards-container"></div>
+      </div>
+      <div class="character">‍💻</div>
+    </div>
+    
+    <!-- Центральная зона с одеждой -->
+    <div class="clothes-pool" id="pool">
+      <div class="pool-label">👕 Гардероб словосочетаний 👗</div>
+    </div>
+    
+    <!-- Кнопки -->
+    <div class="controls">
+      <button class="btn-check" onclick="checkAnswers()">✅ Проверить</button>
+      <button class="btn-reset" onclick="resetGame()">🔄 Заново</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <div class="modal-emoji" id="modalEmoji"></div>
+    <div class="modal-title" id="modalTitle">Молодец!</div>
+    <div class="modal-text" id="modalText"></div>
+    <button class="modal-close" onclick="closeModal()">ОК</button>
+  </div>
+</div>
+
+<script>
+const cardsData = [
+  { text: "представляет собой", style: "nauchnyy", type: "tshirt" },
+  { text: "имеет разновидности", style: "nauchnyy", type: "glasses" },
+  { text: "применяется для доказательства", style: "nauchnyy", type: "scarf" },
+  { text: "состоит из нескольких частей", style: "nauchnyy", type: "hat" },
+  { text: "точка пересечения", style: "nauchnyy", type: "badge" },
+  { text: "солнечное сплетение", style: "nauchnyy", type: "shoe" },
+  { text: "рассмотрим пример", style: "nauchnyy", type: "boot" },
+  { text: "в соответствии со стандартами", style: "oficialnyy", type: "tie" },
+  { text: "муниципальная образовательная организация", style: "oficialnyy", type: "scarf" },
+  { text: "по окончании рабочего дня", style: "oficialnyy", type: "pants" },
+  { text: "на основании заявления", style: "oficialnyy", type: "jacket" },
+  { text: "тоска на сердце", style: "razgovornyy", type: "shoe" },
+  { text: "хорошие делишки", style: "razgovornyy", type: "hat" },
+  { text: "жуткая слякоть", style: "razgovornyy", type: "boot" },
+  { text: "обжора", style: "razgovornyy", type: "tshirt" },
+  { text: "кое-как доплёлся", style: "razgovornyy", type: "pants" },
+  { text: "политическая арена", style: "publicisticheskiy", type: "badge" },
+  { text: "радикальные реформы", style: "publicisticheskiy", type: "tshirt" },
+  { text: "держава", style: "publicisticheskiy", type: "jacket" },
+  { text: "отчизна", style: "publicisticheskiy", type: "glasses" },
+  { text: "общественное мнение", style: "publicisticheskiy", type: "hat" },
+  { text: "горячий отклик", style: "publicisticheskiy", type: "shoe" },
+  { text: "гражданская инициатива", style: "publicisticheskiy", type: "tie" }
+];
+
+let draggedCard = null;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function createCard(cardData) {
+  const card = document.createElement('div');
+  card.className = `clothing-card ${cardData.type}`;
+  card.draggable = true;
+  card.textContent = cardData.text;
+  card.dataset.style = cardData.style;
+  card.addEventListener('dragstart', handleDragStart);
+  card.addEventListener('dragend', handleDragEnd);
+  card.addEventListener('touchstart', handleTouchStart, {passive: false});
+  card.addEventListener('touchmove', handleTouchMove, {passive: false});
+  card.addEventListener('touchend', handleTouchEnd);
+  return card;
+}
+
+function initGame() {
+  const pool = document.getElementById('pool');
+  document.querySelectorAll('.cards-container').forEach(c => c.innerHTML = '');
+  shuffle(cardsData).forEach(data => {
+    pool.appendChild(createCard(data));
+  });
+}
+
+function handleDragStart(e) {
+  draggedCard = e.target;
+  e.target.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragEnd(e) {
+  e.target.classList.remove('dragging');
+  document.querySelectorAll('.suitcase, .clothes-pool').forEach(s => s.classList.remove('drag-over'));
+}
+
+function setupDropZones() {
+  const zones = document.querySelectorAll('.suitcase, .clothes-pool');
+  zones.forEach(zone => {
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      zone.classList.add('drag-over');
+    });
+    zone.addEventListener('dragleave', e => {
+      zone.classList.remove('drag-over');
+    });
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      if (!draggedCard) return;
+      let target = e.target;
+      while (target && !target.classList.contains('cards-container') && !target.classList.contains('clothes-pool')) {
+        target = target.parentElement;
+      }
+      if (target) {
+        target.appendChild(draggedCard);
+      }
+    });
+  });
+}
+
+let touchCard = null;
+let touchOffsetX = 0, touchOffsetY = 0;
+
+function handleTouchStart(e) {
+  touchCard = e.target;
+  const rect = touchCard.getBoundingClientRect();
+  touchOffsetX = e.touches[0].clientX - rect.left;
+  touchOffsetY = e.touches[0].clientY - rect.top;
+  touchCard.style.position = 'fixed';
+  touchCard.style.zIndex = '1000';
+  touchCard.classList.add('dragging');
+}
+
+function handleTouchMove(e) {
+  if (!touchCard) return;
+  e.preventDefault();
+  touchCard.style.left = (e.touches[0].clientX - touchOffsetX) + 'px';
+  touchCard.style.top = (e.touches[0].clientY - touchOffsetY) + 'px';
+}
+
+function handleTouchEnd(e) {
+  if (!touchCard) return;
+  touchCard.style.position = '';
+  touchCard.style.zIndex = '';
+  touchCard.style.left = '';
+  touchCard.style.top = '';
+  touchCard.classList.remove('dragging');
+  
+  const touch = e.changedTouches[0];
+  const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+  let target = elem;
+  while (target && !target.classList.contains('cards-container') && !target.classList.contains('clothes-pool')) {
+    target = target.parentElement;
+  }
+  if (target) {
+    target.appendChild(touchCard);
+  }
+  touchCard = null;
+}
+
+function checkAnswers() {
+  let correct = 0;
+  let total = cardsData.length;
+  let allInSuitcases = true;
+  
+  document.querySelectorAll('.clothing-card').forEach(c => {
+    c.classList.remove('correct', 'wrong');
+  });
+  
+  document.querySelectorAll('.suitcase').forEach(suitcase => {
+    const suitcaseStyle = suitcase.dataset.style;
+    suitcase.querySelectorAll('.clothing-card').forEach(card => {
+      if (card.dataset.style === suitcaseStyle) {
+        card.classList.add('correct');
+        correct++;
+      } else {
+        card.classList.add('wrong');
+      }
+    });
+  });
+  
+  const pool = document.getElementById('pool');
+  if (pool.querySelectorAll('.clothing-card').length > 0) {
+    allInSuitcases = false;
+  }
+  
+  if (!allInSuitcases) {
+    showModal('👕', 'Не вся одежда разложена!', 'Сначала распредели все словосочетания по чемоданам, а потом нажимай «Проверить».', '#f39c12');
+    return;
+  }
+  
+  if (correct === total) {
+    showModal('🎉', 'МОЛОДЕЦ!', `Ты правильно разложил(а) все ${total} словосочетаний по стилям речи! Отличная работа! 🌟`, '#27ae60');
+  } else {
+    showModal('', `Правильно: ${correct} из ${total}`, 'Красные карточки — не на своём месте. Перетащи их в нужный чемодан и попробуй ещё раз!', '#e74c3c');
+  }
+}
+
+function showModal(emoji, title, text, color) {
+  document.getElementById('modalEmoji').textContent = emoji;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalTitle').style.color = color;
+  document.getElementById('modalText').textContent = text;
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+
+function resetGame() {
+  document.querySelectorAll('.clothing-card').forEach(c => c.remove());
+  initGame();
+}
+
+initGame();
+setupDropZones();
+</script>
+
+</body>
+</html>
